@@ -41,38 +41,46 @@ public class App {
             String response = "Comando non valido.";
 
             if (requestURI.equals("/with_tomato")) {
-                response = elencoPizzeConIngrediente("Pomodoro");
+                response = formatPizzas(elencoPizzeConIngrediente("Pomodoro"));
             } else if (requestURI.equals("/with_cheese")) {
-                response = elencoPizzeConIngrediente("Mozzarella");
+                response = formatPizzas(elencoPizzeConIngrediente("Mozzarella"));
             } else if (requestURI.equals("/sorted_by_price")) {
-                response = "Elenco Pizze Ordinate per Prezzo:\n" + elencoPizzeOrdinatePerPrezzo();
+                response = formatPizzas(elencoPizzeOrdinatePerPrezzo());
             }
 
             inviaRisposta(exchange, response);
         }
 
+        private String formatPizzas(String pizzas) {
+            return "```" + pizzas + "```";
+        }
+
         private String elencoPizzeConIngrediente(String ingrediente) {
             StringBuilder sb = new StringBuilder();
             sb.append("Pizze con ").append(ingrediente).append(":\n");
+            List<Pizza> sortedPizzas = new ArrayList<>();
             for (Pizza pizza : pizzas) {
                 if (pizza.getIngredienti().contains(ingrediente)) {
-                    sb.append(pizza.getNome()).append(" - $").append(pizza.getPrezzo()).append(" - Ingredienti: ").append(String.join(", ", pizza.getIngredienti())).append("\n");
+                    sortedPizzas.add(pizza);
                 }
+            }
+            sortedPizzas.sort(Comparator.comparingInt(Pizza::getPrezzo));
+            for (Pizza pizza : sortedPizzas) {
+                sb.append(String.format("%-20s - $%-2d - Ingredienti: %s\n", pizza.getNome(), pizza.getPrezzo(), String.join(", ", pizza.getIngredienti())));
             }
             return sb.toString();
         }
 
         private String elencoPizzeOrdinatePerPrezzo() {
-            List<Pizza> pizzeOrdinate = new ArrayList<>(pizzas);
-            pizzeOrdinate.sort(Comparator.comparingInt(Pizza::getPrezzo));
+            List<Pizza> sortedPizzas = new ArrayList<>(pizzas);
+            sortedPizzas.sort(Comparator.comparingInt(Pizza::getPrezzo));
             StringBuilder sb = new StringBuilder();
-            for (Pizza pizza : pizzeOrdinate) {
-                sb.append(pizza.getNome()).append(" - $").append(pizza.getPrezzo()).append(" - Ingredienti: ").append(String.join(", ", pizza.getIngredienti())).append("\n");
+            sb.append("Elenco Pizze Ordinate per Prezzo:\n");
+            for (Pizza pizza : sortedPizzas) {
+                sb.append(String.format("%-20s - $%-2d - Ingredienti: %s\n", pizza.getNome(), pizza.getPrezzo(), String.join(", ", pizza.getIngredienti())));
             }
             return sb.toString();
         }
-
-
 
         private void inviaRisposta(HttpExchange exchange, String response) throws IOException {
             exchange.sendResponseHeaders(200, response.length());
